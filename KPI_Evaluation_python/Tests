@@ -1,0 +1,11 @@
+def calculate_percentage_shift(ff, ff_base):
+    if ff_base == 0:
+        return "undefined"  # Handle division by zero
+    percentage_shift = ((ff - ff_base) / ff_base) * 100
+    return percentage_shift
+
+# Example usage
+ff_base = 0.4
+ff = 0.6
+percentage_shift = calculate_percentage_shift(ff, ff_base)
+print(f"Percentage Shift: {percentage_shift}%")
