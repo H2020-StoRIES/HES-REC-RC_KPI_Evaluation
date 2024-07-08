@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-random.seed(0)
+random.seed(1)
 
 class MetricCalculator():
     def __init__(self):
@@ -12,8 +12,10 @@ class MetricCalculator():
         self.P_cons = np.array([round(random.uniform(1000, 1500), 2) for _ in range(24)])
         self.P_ESS = np.array([round(random.uniform(-500, 500), 2) for _ in range(24)])
         self.P_delta = self.P_el_in - self.P_el_out
+        self.P_el_in_base = np.array([round(random.uniform(1000, 1500), 2) for _ in range(24)])
+        self.P_el_out_base = np.array([round(random.uniform(1000,1500), 2) for _ in range(24)])
+        self.P_delta_base = self.P_el_in_base - self.P_el_out_base
         self.data = {}
-        self.Metric = {}
 
     def calculate(self):
         self.data['Price_market'] = self.Price_market
@@ -23,20 +25,13 @@ class MetricCalculator():
         self.data['P_cons'] = self.P_cons
         self.data['P_ESS'] = self.P_ESS
         self.data['P_delta'] = self.P_delta
-
-        # Example metric calculations
-        self.Metric['Average_Price_market'] = np.mean(self.Price_market)
-        self.Metric['Average_Price_tarrif'] = np.mean(self.Price_tarrif)
-        self.Metric['Total_P_el_in'] = np.sum(self.P_el_in)
-        self.Metric['Total_P_el_out'] = np.sum(self.P_el_out)
-        self.Metric['Total_P_cons'] = np.sum(self.P_cons)
-        self.Metric['Total_P_ESS'] = np.sum(self.P_ESS)
-        self.Metric['Total_P_delta'] = np.sum(self.P_delta)
-
-        return self.data, self.Metric
+        self.data['P_el_in_base'] = self.P_el_in_base
+        self.data['P_el_out_base'] = self.P_el_out_base
+        self.data['P_delta_base'] = self.P_delta_base
+        return self.data
 
 metric_calculator = MetricCalculator()
 
 # Call the calculate method
-data, metric = metric_calculator.calculate()
+data = metric_calculator.calculate()
 
