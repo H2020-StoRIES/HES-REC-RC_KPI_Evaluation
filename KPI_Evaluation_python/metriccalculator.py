@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-random.seed(1)
+random.seed(5)
 
 class MetricCalculator():
     def __init__(self):
