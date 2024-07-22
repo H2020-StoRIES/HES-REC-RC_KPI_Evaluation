@@ -1,6 +1,5 @@
 import random
 import numpy as np
-
 random.seed(5)
 
 class MetricCalculator():

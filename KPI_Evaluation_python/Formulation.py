@@ -1,6 +1,11 @@
 import numpy as np
 from config import Config
-midian = Config.get_config().midian
+import logging
+from logging_util import setup_logging
+setup_logging()
+
+
+median = Config.get_config().median
 T = Config.get_config().T
 
 class Flexibility:
@@ -29,17 +34,17 @@ class Flexibility:
         self.metrics = {}
 
     def FF_Pdelta(self):
-        FF_Pdelta = (np.sum(self.sorted_Price_market[:midian] * self.sorted_P_delta[:midian]) - 
-                     np.sum(self.sorted_Price_market[midian:] * self.sorted_P_delta[midian:])) / (
-                    np.sum(self.sorted_Price_market[:midian] * self.sorted_P_delta[:midian]) + 
-                    np.sum(self.sorted_Price_market[midian:] * self.sorted_P_delta[midian:]))
+        FF_Pdelta = (np.sum(self.sorted_Price_market[:median] * self.sorted_P_delta[:median]) - 
+                     np.sum(self.sorted_Price_market[median:] * self.sorted_P_delta[median:])) / (
+                    np.sum(self.sorted_Price_market[:median] * self.sorted_P_delta[:median]) + 
+                    np.sum(self.sorted_Price_market[median:] * self.sorted_P_delta[median:]))
         self.metrics['FF_Pdelta'] = FF_Pdelta
 
     def FF_Pcons(self):
-        FF_Pcons = (np.sum(self.sorted_Price_tarrif[:midian] * self.sorted_P_cons[:midian]) - 
-                    np.sum(self.sorted_Price_tarrif[midian:] * self.sorted_P_cons[midian:])) / (
-                   np.sum(self.sorted_Price_tarrif[:midian] * self.sorted_P_cons[:midian]) + 
-                   np.sum(self.sorted_Price_tarrif[midian:] * self.sorted_P_cons[midian:]))
+        FF_Pcons = (np.sum(self.sorted_Price_tarrif[:median] * self.sorted_P_cons[:median]) - 
+                    np.sum(self.sorted_Price_tarrif[median:] * self.sorted_P_cons[median:])) / (
+                   np.sum(self.sorted_Price_tarrif[:median] * self.sorted_P_cons[:median]) + 
+                   np.sum(self.sorted_Price_tarrif[median:] * self.sorted_P_cons[median:]))
         self.metrics['FF_Pcons'] = FF_Pcons
 
     def FF_PC_Pcons(self):
@@ -51,6 +56,7 @@ class Flexibility:
             self.metrics['FF_PC_Pcons'] = FF_PC_Pcons
             return FF_PC_Pcons
         else:
+            logging.error('Division by zero in FF_PC_Pcons')
             print('Division by zero in FF_PC_Pcons')
             return None
 
@@ -63,6 +69,8 @@ class Flexibility:
             self.metrics['FF_PC_Pdelta'] = FF_PC_Pdelta
             return FF_PC_Pdelta
         else:
+            
+            logging.error('Division by zero in FF_PC_Pdelta')
             print('Division by zero in FF_PC_Pdelta')
             return None
 
@@ -71,6 +79,8 @@ class Flexibility:
             FF_VS_Pdelta = (FF_PC_Pdelta - FF_PC_ref) / FF_PC_Pdelta
             self.metrics['FF_VS_Pdelta'] = FF_VS_Pdelta
         else:
+            
+            logging.error('Division by zero in FF_VS_Pdelta')
             print('Division by zero in FF_VS_Pdelta')
 
     def FF_VS_Pcons(self, FF_PC_ref, FF_PC_Pcons):
@@ -78,33 +88,37 @@ class Flexibility:
             FF_VS_Pcons = (FF_PC_Pcons - FF_PC_ref) / FF_PC_Pcons
             self.metrics['FF_VS_Pcons'] = FF_VS_Pcons
         else:
+            logging.error('Division by zero in FF_VS_Pcons')
             print('Division by zero in FF_VS_Pcons')
     def FF (self):
         if sum(self.export_P_delta) != 0 or sum(self.import_P_delta) != 0:
-            # FF = 0.5*(np.sum(self.import_P_delta[:midian]) /np.sum(self.import_P_delta) + np.sum(self.export_P_delta[midian:]) /np.sum(self.export_P_delta))
-            FF = (np.sum(self.import_P_delta[:midian])+np.sum(self.export_P_delta[midian:])) /(np.sum(self.import_P_delta) + np.sum(self.export_P_delta))
+            # FF = 0.5*(np.sum(self.import_P_delta[:median]) /np.sum(self.import_P_delta) + np.sum(self.export_P_delta[median:]) /np.sum(self.export_P_delta))
+            FF = (np.sum(self.import_P_delta[:median])+np.sum(self.export_P_delta[median:])) /(np.sum(self.import_P_delta) + np.sum(self.export_P_delta))
 
             self.metrics['FF'] = FF
         else:
+            logging.error('Division by zero in FF')
             print('Division by zero in FF')
     def FF_base (self):
         if sum(self.export_P_delta_base) != 0 or sum (self.import_P_delta_base) != 0:
-            # FF_base = 0.5*(np.sum(self.import_P_delta_base[:midian]) /np.sum(self.import_P_delta_base) + np.sum(self.export_P_delta_base[midian:]) /np.sum(self.export_P_delta_base))
-            FF_base = (np.sum(self.import_P_delta_base[:midian])+np.sum(self.export_P_delta_base[midian:])) /(np.sum(self.import_P_delta_base) + np.sum(self.export_P_delta_base))
+            # FF_base = 0.5*(np.sum(self.import_P_delta_base[:median]) /np.sum(self.import_P_delta_base) + np.sum(self.export_P_delta_base[median:]) /np.sum(self.export_P_delta_base))
+            FF_base = (np.sum(self.import_P_delta_base[:median])+np.sum(self.export_P_delta_base[median:])) /(np.sum(self.import_P_delta_base) + np.sum(self.export_P_delta_base))
             self.metrics['FF_base'] = FF_base
         else:
             print('Division by zero in FF_base')
+            logging.error('Division by zero in FF_base')
 
     def FF_W (self):
         if sum (self.export_P_delta) != 0 or sum(self.import_P_delta) != 0:
-            lpt_Avg = np.average(self.sorted_Price_market[:midian])
-            hpt_Avg = np.average(self.sorted_Price_market[midian:])
-            # FF_W = 0.5*(np.sum(self.import_P_delta[:midian])*lpt_Avg /np.sum(self.import_P_delta) + np.sum(self.export_P_delta[midian:])*hpt_Avg /np.sum(self.export_P_delta))/(lpt_Avg+hpt_Avg)
-            FF_W =(np.sum(self.import_P_delta[:midian])*lpt_Avg +np.sum(self.export_P_delta[midian:])*hpt_Avg) /(np.sum(self.import_P_delta)*lpt_Avg  + np.sum(self.export_P_delta)*hpt_Avg)
+            lpt_Avg = np.average(self.sorted_Price_market[:median])
+            hpt_Avg = np.average(self.sorted_Price_market[median:])
+            # FF_W = 0.5*(np.sum(self.import_P_delta[:median])*lpt_Avg /np.sum(self.import_P_delta) + np.sum(self.export_P_delta[median:])*hpt_Avg /np.sum(self.export_P_delta))/(lpt_Avg+hpt_Avg)
+            FF_W =(np.sum(self.import_P_delta[:median])*lpt_Avg +np.sum(self.export_P_delta[median:])*hpt_Avg) /(np.sum(self.import_P_delta)*lpt_Avg  + np.sum(self.export_P_delta)*hpt_Avg)
             
             self.metrics['FF_W'] = FF_W
         else:
             print('Division by zero in FF')
+            logging.error('Division by zero in FF')
 
     def FF_shift (self, FF, FF_base): 
         print(FF, FF_base)
@@ -119,9 +133,11 @@ class Flexibility:
             self.metrics['FF_SB'] = FF_SB
         else:
             print('Division by zero in FF_SB')
+            logging.error('Division by zero in FF_SB')
 
     def calculate(self):
         return self.metrics
+        
 
 
 
