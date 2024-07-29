@@ -28,8 +28,10 @@ class Flexibility:
         self.sorted_P_el_out_base = data['P_el_out_base'][self.sorted_indices1]
         self.export_P_delta_base = np.where(self.sorted_P_delta_base < 0, self.sorted_P_delta_base, 0)
         self.import_P_delta_base = np.where(self.sorted_P_delta_base > 0, self.sorted_P_delta_base, 0)   
-        self.export_P_delta = np.where(self.sorted_P_delta < 0, self.sorted_P_delta, 0) 
+        self.export_P_delta = -1* np.where(self.sorted_P_delta < 0, self.sorted_P_delta, 0) 
         self.import_P_delta = np.where(self.sorted_P_delta > 0, self.sorted_P_delta, 0)
+        self.import_price = np.where(self.sorted_P_delta > 0, self.sorted_Price_market, 0)
+        self.export_price = np.where(self.sorted_P_delta < 0, self.sorted_Price_market, 0)
         
         self.metrics = {}
 
@@ -113,7 +115,7 @@ class Flexibility:
             lpt_Avg = np.average(self.sorted_Price_market[:median])
             hpt_Avg = np.average(self.sorted_Price_market[median:])
             # FF_W = 0.5*(np.sum(self.import_P_delta[:median])*lpt_Avg /np.sum(self.import_P_delta) + np.sum(self.export_P_delta[median:])*hpt_Avg /np.sum(self.export_P_delta))/(lpt_Avg+hpt_Avg)
-            FF_W =(np.sum(self.import_P_delta[:median])*lpt_Avg +np.sum(self.export_P_delta[median:])*hpt_Avg) /(np.sum(self.import_P_delta)*lpt_Avg  + np.sum(self.export_P_delta)*hpt_Avg)
+            FF_W =(np.sum(self.import_P_delta[:median])*lpt_Avg +np.sum(self.export_P_delta[median:])*hpt_Avg) /(np.sum(self.import_P_delta*self.import_price)  + np.sum(self.export_P_delta*self.export_price))
             
             self.metrics['FF_W'] = FF_W
         else:
