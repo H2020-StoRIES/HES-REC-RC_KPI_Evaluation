@@ -10,22 +10,19 @@ from config import Config
 current_dir = os.path.dirname(__file__)
 
 # Construct the full path to the JSON files
-file_path1 = os.path.join(current_dir, 'OUT_20240827T134053_KPI.json')
-file_path2 = os.path.join(current_dir, 'OUT_20240827T134053.json')
+file_path1 = os.path.join(current_dir, 'OUT_20240926T142612_KPI.json')
 
 # Open and read the JSON files
 with open(file_path1, 'r') as file:
-    data2 = json.load(file)
+    data1 = json.load(file)
 
-with open(file_path2, 'r') as file1:
-    data1 = json.load(file1)
 T= Config.T
 class MetricCalculator():
     def __init__(self):
         
-        self.Price_export = np.array(data2['EP_con']) # Generated values for the price export
-        self.Price_import = np.array(data2['EP_gen'] )# Generated values for the price import
-        self.P_delta = np.array(data2['Pe_grid'])        
+        self.Price_export = np.array(data1['EP_con']) # Generated values for the price export
+        self.Price_import = np.array(data1['EP_gen']) # Generated values for the price import
+        self.P_delta = np.array(data1['Pe_grid'])        
         self.P_import= -np.where(self.P_delta < 0, self.P_delta, 0)
         self.P_export= np.where(self.P_delta > 0, self.P_delta, 0)
         rand_var= max(max(self.P_import),  max(self.P_export))
@@ -39,8 +36,7 @@ class MetricCalculator():
         self.P_ess_BAT= data1['P_ess_BAT'] # Hourly power charged by the battery
         self.P_ess_SC= data1['P_ess_SC'] # Hourly power charged by the supercapacitor
         self.P_ess_HP= data1['P_ess_HP'] # Hourly power charged by the heat pump
-        self.P_CT_rk= data1['P_CT_rk'] #??
-        self.P_gri= data1['e_gri'] # Hourly grid exchange
+        self.P_CT_rk= data1['P2rk'] #??
         self.SOC_BAT= data1['SOC_BAT'] # Hourly state of charge of the battery
         self.SOC_SC= data1['SOC_SC'] # Hourly state of charge of the supercapacitor
         self.SOC_HP= data1['SOC_HP'] # Hourly state of charge of the heat pump
@@ -53,22 +49,26 @@ class MetricCalculator():
         self.E_ess_SC= sum (self.P_ess_SC[:T])
         self.E_ess_HP= sum (self.P_ess_HP[:T])
         self.E_CT_rk= sum (self.P_CT_rk[:T])
-        self.E_gri= sum (self.P_gri[:T])
+        self.P_c_Ctbu= data1['P_c_Ctbu']
+        self.P_ess_PCM= data1['P_ess']
+        self.P_csp= data1['P_csp']
+        self.P_tsp= data1['P_tsp']
+        self.Pt_grid= data1['Pt_grid']
+
 
 # Eff1= 
 #         self.data = {}
 
     def calculate(self):
-        keys= [ 'Price_export', 'Price_import', 'P_delta', 'P_import', 'P_export', 
-               'P_import_base', 'P_export_base']
+        keys= [ 'Price_export', 'Price_import', 'P_delta', 'P_import', 'P_export', 'P_import_base', 'P_export_base']
         values= [ self.Price_export, self.Price_import, self.P_delta, self.P_import, self.P_export, 
                  self.P_import_base, self.P_export_base]
         self.data_flex = dict(zip(keys, values))
-        keys1= ['P_CT_WD', 'P_CT_PV', 'P_c_Cbu', 'P_c_CEV', 'P_c_CPl', 'P_ess_BAT', 'P_ess_SC',
-                 'P_ess_HP', 'P_CT_rk', 'P_gri', 'SOC_BAT', 'SOC_SC', 'SOC_HP']
+        keys1= ['P_CT_WD', 'P_CT_PV', 'P_c_Cbu', 'P_c_CEV', 'P_c_CPl', 'P_ess_BAT', 'P_ess_SC','P_delta', 'P_c_Ctbu', 'P_ess_PCM',
+                  'Pt_grid', 'P_tsp','P_csp','P_CT_rk', 'SOC_BAT','P_ess_HP', 'SOC_SC', 'SOC_HP']
         
-        values1= [self.P_CT_WD, self.P_CT_PV, self.P_c_Cbu, self.P_c_CEV, self.P_c_CPl, self.P_ess_BAT, self.P_ess_SC,
-                    self.P_ess_HP, self.P_CT_rk, self.P_gri, self.SOC_BAT, self.SOC_SC, self.SOC_HP]
+        values1= [self.P_CT_WD, self.P_CT_PV, self.P_c_Cbu, self.P_c_CEV, self.P_c_CPl, self.P_ess_BAT, self.P_ess_SC,self.P_delta, self.P_c_Ctbu, self.P_ess_PCM,
+                   self.Pt_grid, self.P_tsp, self.P_csp,self.P_CT_rk, self.SOC_BAT,self.P_ess_HP, self.SOC_SC, self.SOC_HP]
         
         self.data_eff = dict(zip(keys1, values1))
 

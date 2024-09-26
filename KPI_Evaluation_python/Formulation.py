@@ -111,27 +111,41 @@ class efficiency:
         P_ess_BAT_array = np.array(data['P_ess_BAT'][:T])
         self.E_ess_BAT_ch = np.sum(P_ess_BAT_array[P_ess_BAT_array < 0])
         self.E_ess_BAT_dis = np.sum(P_ess_BAT_array[P_ess_BAT_array > 0])
-        
         self.P_ess_SC = data['P_ess_SC']  # Add this line to define self.P_ess_SC
         self.P_ess_HP = data['P_ess_HP']  # Add this line to define self.P_ess_HP
         self.P_CT_rk = data['P_CT_rk']  # Add this line to define self.P_CT_rk
-        self.P_gri = data['P_gri']  # Add this line to define self.P_gri
+        self.P_delta = data['P_delta']  # Add this line to define self.P_gri
+        self.E_delta= sum(data['P_delta'][:T]) # Energy exchanged with the external grid
         self.E_ess_SC= sum (data['P_ess_SC'][:T])
         P_ess_SC_array = np.array(data['P_ess_SC'][:T])
         self.E_ess_SC_ch = np.sum(P_ess_SC_array[P_ess_SC_array < 0])
         self.E_ess_SC_dis = np.sum(P_ess_SC_array[P_ess_SC_array > 0])
         self.E_ess_HP= sum (data['P_ess_HP'][:T])
         self.E_CT_rk= sum (data['P_CT_rk'][:T])
-        self.E_gri= sum (data['P_gri'][:T])
-        self.E_c_tbu= 0#??????????Energy discharged by thermal ESS
-        self.E_PCM_ch= 0#??????????Energy charged by PCM Phase-change material
-        self.E_PCM_dis= 0#??????????
-        self.E_CSP= 0#??????????Concentrated solar power
-        self.E_STP= 0#??????????Solar thermal plant
+        self.P_c_tbu= data['P_c_Ctbu']# Thermal consumption of the building
+        self.E_c_tbu= sum(data['P_c_Ctbu'][:T]) # Energy of the building
+        self.P_PCM= np.array(data['P_ess_PCM'][:T]) # Power of PCM Phase-change material
+        self.E_PCM_ch= np.sum(P_ess_SC_array[P_ess_SC_array < 0] )# Energy charged by PCM Phase-change material
+        self.E_PCM_dis= np.sum(P_ess_SC_array[P_ess_SC_array > 0])# Energy discharged by PCM Phase-change material
+        self.P_csp= data['P_csp'] # Concentrated solar power
+        self.E_csp= sum(data['P_csp'][:T]) # Energy of the concentrated solar power
+        self.E_STP= sum(data['P_tsp'][:T]) # Solar thermal power
+        self.E_th_ext= sum(data['Pt_grid'][:T]) # Thermal energy exchanged with the external grid
         self.data = data
     def Eff (self):
-        Eff= (self.E_c_Cbu+ self.E_c_CEV+ self.E_c_CPl+ self.E_c_tbu+ self.E_ess_BAT_ch+self.E_ess_SC_ch +self.E_PCM_ch)/(self.E_gri+
-                self.E_CT_WD + self.E_CT_PV + self.E_CSP+self.E_STP+ self.E_ess_BAT_dis+self.E_ess_SC_dis+self.E_PCM_dis)
+        E_El_consumption= self.E_c_Cbu+ self.E_c_CEV+ self.E_c_CPl #Electrical consumption
+        E_th_consumption= self.E_c_tbu #Thermal consumption
+        E_El_ESS_ch= self.E_ess_BAT_ch+self.E_ess_SC_ch #ESS Electrical energy charged
+        E_th_ESS_ch= E_El_ESS_ch +self.E_PCM_ch #ESS Thermal energy charged
+        E_El_ext= self.E_delta #​Electrical energy exchanged with the external grid
+        E_th_ext= self.E_th_ext #Thermal energy exchanged with the external grid
+        E_El_gen= self.E_CT_WD + self.E_CT_PV  #Electrical energy generated
+        E_th_gen= self.E_csp+self.E_STP + self.E_CT_rk #Thermal energy generated
+        E_ESS_El_dis= self.E_ess_BAT_dis+self.E_ess_SC_dis #ESS Electrical energy discharged
+        E_ESS_th_dis= self.E_PCM_dis #ESS Thermal energy discharged
+        Eff= (E_El_consumption + E_th_consumption + E_th_ESS_ch)/(E_El_ext +E_th_ext+
+                E_El_gen+ E_th_gen+ E_ESS_El_dis+E_ESS_th_dis)
+        
         self.metrics['Eff'] = Eff
     def calculate(self):
         return self.metrics
