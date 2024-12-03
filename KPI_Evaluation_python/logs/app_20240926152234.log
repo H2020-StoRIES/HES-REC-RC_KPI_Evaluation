@@ -1,0 +1,4 @@
+2024-09-26 15:22:34,639 - root - INFO - Congiguration: 
+ T: 24, median: 12, FF_PC_ref: 7.0
+2024-09-26 15:22:34,639 - root - INFO - Starting the metric calculation process
+2024-09-26 15:22:34,640 - root - INFO - Metrics: {'FF': np.float64(0.340135779209961), 'FF_base': np.float64(0.43427026510851713), 'FF_W': np.float64(0.18745032302672865), 'FF_SB': np.float64(-379.89901674970577), 'FF_shift': np.float64(-27.675561247100738)}
