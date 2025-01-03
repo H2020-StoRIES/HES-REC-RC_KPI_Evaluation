@@ -23,6 +23,10 @@ def write_to_excel(metrics, dir, run_id):
         worksheet.write(row, col + 1, float(v))
         row += 1
     workbook.close()
+def write_to_json(metrics, dir, run_id):
+    file_path = Path(dir) / f'KPI_outputs_scenario_{run_id}.json'
+    with open(file_path, 'w') as json_file:
+        json.dump(metrics, json_file, indent=4)
 
 def calculate_metrics(data, run_id):
     metric_calculator = MetricCalculator(data)
@@ -40,6 +44,7 @@ def calculate_metrics(data, run_id):
 
     metrics = MC.calculate()
     write_to_excel(metrics, dir, run_id)
+    write_to_json(metrics, dir, run_id)
 
 def main(file_name, dir, run_id):
     logging.info("Starting the metric calculation process")
