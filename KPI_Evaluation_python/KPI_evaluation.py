@@ -11,7 +11,7 @@ def read_json_file(file_path):
         return json.load(file)
     
 def write_to_excel(metrics, dir, run_id):
-    file_path = Path(dir) / f'KPI_outputs_scenario_{run_id}.xlsx'
+    file_path = Path(dir) / f'KPI_outputs_{run_id}.xlsx'
     workbook = xlsxwriter.Workbook(file_path)
     worksheet = workbook.add_worksheet()
 
@@ -24,12 +24,12 @@ def write_to_excel(metrics, dir, run_id):
         row += 1
     workbook.close()
 def write_to_json(metrics, dir, run_id):
-    file_path = Path(dir) / f'KPI_outputs_scenario_{run_id}.json'
+    file_path = Path(dir) / f'KPI_outputs_{run_id}.json'
     with open(file_path, 'w') as json_file:
         json.dump(metrics, json_file, indent=4)
 
-def calculate_metrics(data, run_id):
-    metric_calculator = MetricCalculator(data)
+def calculate_metrics(data, run_id, data_base):
+    metric_calculator = MetricCalculator(data, data_base)
     MC = metric_calculator
     MC.FF()
     MC.FF_base()
@@ -43,6 +43,7 @@ def calculate_metrics(data, run_id):
 
 
     metrics = MC.calculate()
+    print(metrics)
     write_to_excel(metrics, dir, run_id)
     write_to_json(metrics, dir, run_id)
 
@@ -50,7 +51,9 @@ def main(file_name, dir, run_id):
     logging.info("Starting the metric calculation process")
     file_path1 = os.path.join( dir, f'{file_name}.json')
     data = read_json_file(file_path1)
-    calculate_metrics(data, run_id)
+    file_path_base= os.path.join( dir, f'Base_case_KPI.json')
+    data_base= read_json_file(file_path_base)
+    calculate_metrics(data, run_id, data_base)
 
 if __name__ == "__main__":
     # file_name = 'OUT_20240926T142612_KPI.json'
