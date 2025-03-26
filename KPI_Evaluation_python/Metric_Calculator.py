@@ -15,11 +15,11 @@ median = Config.get_config().median
 class MetricCalculator():
     def __init__(self, data1, data_base):
         
-        # self.Price_export = np.array(data1['EP_con']) # Generated values for the price export
-        # self.Price_import = np.array(data1['EP_gen']) # Generated values for the price import
-        self.Price_export = np.array(data1['Price']) # Generated values for the price export
-        self.Price_import = np.array(data1['Price']) # Generated values for the price import
-        self.Price_th = np.array(data1['Price_gas']) # Generated values for the price import
+        self.Price_export = np.array(data1['EP_con']) # Generated values for the price export
+        self.Price_import = np.array(data1['EP_gen']) # Generated values for the price import
+        # self.Price_export = np.array(data1['Price']) # Generated values for the price export
+        # self.Price_import = np.array(data1['Price']) # Generated values for the price import
+        # self.Price_th = np.array(data1['Price_gas']) # Generated values for the price import
         self.P_delta = np.array(data1['Pe_grid']) 
                
         self.P_import= -np.where(self.P_delta < 0, self.P_delta, 0)
