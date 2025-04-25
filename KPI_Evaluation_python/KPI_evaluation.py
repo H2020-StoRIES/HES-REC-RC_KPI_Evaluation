@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from Metric_Calculator import MetricCalculator
+from Metric_Calculator1 import MetricCalculator
 import sys
 import xlsxwriter 
 from pathlib import Path
@@ -37,6 +37,8 @@ def calculate_metrics(data, run_id, data_base):
     MC.FF_SB()
     MC.FF_shift()
     MC.Eff()
+    MC.Eff_th()
+    MC.LCOE()
     # print(MC.calculate())
     # for k, v in MC.calculate().items():
     #     print(f"{k}: {float(v)}")
