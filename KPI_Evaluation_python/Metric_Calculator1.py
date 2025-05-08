@@ -13,18 +13,18 @@ setup_logging()
 T= Config.T
 median = Config.get_config().median
 class MetricCalculator():
-    def __init__(self, data1, data_base):
+    def __init__(self, data, data_simulink, data_opt,  data_base):
         
-        self.Price_export = np.array(data1['EP_con']) # Generated values for the price export
-        self.Price_import = np.array(data1['EP_gen']) # Generated values for the price import
-        self.P_delta = np.array(data1['Pe_grid']) 
+        self.Price_export = np.array(data['EP_con']) # Generated values for the price export
+        self.Price_import = np.array(data['EP_gen']) # Generated values for the price import
+        self.P_delta = np.array(data['Pe_grid']) 
         self.P_import= -np.where(self.P_delta < 0, self.P_delta, 0)
         self.P_export= np.where(self.P_delta > 0, self.P_delta, 0)
         self.P_delta_base = np.array(data_base['Pe_grid'])
         self.P_import_base =- np.where(self.P_delta_base < 0, self.P_delta_base, 0)
         self.P_export_base = np.where(self.P_delta_base > 0, self.P_delta_base, 0)
-        self.P_CT_rk= np.array(data1['P2rk']) #Power to Rankine Cycle
-        self.Pt_grid= np.array(data1['Pt_grid'])
+        self.P_CT_rk= np.array(data['P2rk']) #Power to Rankine Cycle
+        self.Pt_grid= np.array(data['Pt_grid'])
         self.Pt_import =- np.where(self.Pt_grid < 0, self.Pt_grid, 0)
         self.Pt_export = np.where(self.Pt_grid > 0, self.Pt_grid, 0)
         self.sorted_indices_export = np.argsort(self.Price_export)
@@ -35,11 +35,41 @@ class MetricCalculator():
         self.sorted_P_import = self.P_import[self.sorted_indices_import]   
         self.sorted_P_import_base = self.P_import_base[self.sorted_indices_import]
         self.sorted_P_export_base = self.P_export_base[self.sorted_indices_export]
-        self.Total_El_load = np.array(data1 ['Total_El_load'])
-        self.Total_Th_load = np.array(data1 ['Total_Th_load'])
-        self.Total_El_Gen = np.array(data1['Total_El_Gen'])
-        self.Total_Th_Gen = np.array(data1['Total_Th_Gen'])  
         self.E_th_ext= sum(self.Pt_grid[:T])
+        self.Total_El_load = np.array(data ['Total_El_load'])
+        self.Total_Th_load = np.array(data ['Total_Th_load'])
+        # self.Total_El_Gen = np.array(data['Total_El_Gen'])
+        # self.Total_Th_Gen = np.array(data['Total_Th_Gen'])  
+        self.cost_obj = np.array(data['cost_obj'])
+        self.Cost_operation_ESS = np.array(data['Cost_operation_ESS'])
+        self.Price_operational_PV= data_opt['Generation']['PV']['Cost_operational']
+        self.Price_operational_WT= data_opt['Generation']['WT']['Cost_operational']
+        self.Price_operational_TPS= data_opt['Generation']['TPS']['Cost_operational']
+        self.Price_operational_CSP= data_opt['Generation']['CSP']['Cost_operational']
+        self.Price_investment_PV= data_opt['Generation']['PV']['Capital_cost_per_module']
+        self.Price_investment_WT= data_opt['Generation']['WT']['Capital_cost_per_module']
+        self.Price_investment_TPS= data_opt['Generation']['TPS']['Capital_cost_per_module']
+        self.Price_investment_CSP= data_opt['Generation']['CSP']['Capital_cost_per_module']
+        self.Price_investment_Bat= data_opt['Electrcial_Storage_Units'][0][list(data_opt['Electrcial_Storage_Units'][0].keys())[0]]["Capital_cost_per_module"]
+        self.Price_investment_sc= data_opt['Electrcial_Storage_Units'][1][list(data_opt['Electrcial_Storage_Units'][1].keys())[0]]["Capital_cost_per_module"]
+        self.Price_investment_HP= data_opt['Electrcial_Storage_Units'][2][list(data_opt['Electrcial_Storage_Units'][2].keys())[0]]["Capital_cost_per_module"]
+        self.Price_investment_PCM= data_opt['Thermal_Storage_Units'][0][list(data_opt['Thermal_Storage_Units'][0].keys())[0]]["Capital_cost_per_module"]
+        self.Price_investment_RC= data_opt['Thermal_to_Electrical_Converters'][0][list(data_opt['Thermal_to_Electrical_Converters'][0].keys())[0]]["Capital_cost_per_module"]
+        self.Ness_Bat= data_simulink['BAT_ESSm']["Ness"]
+        self.Ness_sc= data_simulink['SC_ESSm']["Ness"]
+        self.Ness_HP= data_simulink['HP_ESSm']["Ness"]
+        self.Ness_PCM= data_simulink['PCM_ESS']["Ness"]
+        self.Total_PV= sum(np.array(data["P_CT_PV"]))
+        self.Total_WT= sum(np.array(data["P_CT_WD"]))
+        self.Total_TPS= sum(np.array(data["P_tsp"]))
+        self.Total_CSP= sum(np.array(data["P_csp"]))
+        self.Total_P2rk= sum(np.array(data["P2rk"]))
+        self.life_time= data_opt['General']['lifeTime']
+        self.discount_rate= data_opt['General']['discountRate']
+        self.Total_El_Gen= sum(np.array(data["P_CT_PV"])) + sum(np.array(data["P_CT_WD"])) 
+        self.Total_Th_Gen= sum(np.array(data["P_tsp"])) + sum(np.array(data["P_csp"]))
+
+        
         self.metrics = {}
         
 
@@ -119,22 +149,61 @@ class MetricCalculator():
             logging.error('Division by zero in FF_SB')
     
     def Eff (self):        
-        # Eff= (abs(sum(self.Total_El_load))+abs(sum(self.P_export )))/(abs(sum(self.Total_El_Gen))+abs(sum(self.P_import))+abs(sum(self.P_CT_rk)))
         Eff = (
             abs(sum(self.Total_El_load)) + abs(sum(self.P_export))
         ) / (
-            abs(sum(self.Total_El_Gen)) + abs(sum(self.P_import)) + 0.38 * abs(sum(self.P_CT_rk))
+            abs(self.Total_El_Gen) + abs(sum(self.P_import)) + 0.38 * abs(sum(self.P_CT_rk))
         )
         self.metrics['Eff'] = Eff   
     def Eff_th (self):
-        # Eff_th= (abs(sum(self.Total_Th_load))+abs(sum(self.Pt_export))+abs(sum(self.P_CT_rk)))/(abs(sum(self.Total_Th_Gen))+abs(sum(self.Pt_import)))
-        Eff_th = (
-            abs(sum(self.Total_Th_load)) + abs(sum(self.Pt_export))
-        ) / (
-            abs(sum(self.Total_Th_Gen)) + abs(sum(self.Pt_import))
-        )        
-        self.metrics['Eff_th'] = Eff_th
+        denominator = abs(self.Total_Th_Gen) + abs(sum(self.Pt_import))
+        if denominator != 0:
+            Eff_th = (
+                abs(sum(self.Total_Th_load)) + abs(sum(self.Pt_export))
+                + 0.62 * abs(sum(self.P_CT_rk))
+            ) / denominator
+            self.metrics['Eff_th'] = Eff_th
+        else:
+            self.metrics['Eff_th'] = None
+            print('Division by zero in Eff_th calculation')
+            logging.error('Division by zero in Eff_th calculation')
+    def Cost_investment_ESS (self):
+        Cost_investment_ESS = (self.Price_investment_Bat * self.Ness_Bat + self.Price_investment_sc * self.Ness_sc + self.Price_investment_HP * self.Ness_HP) + self.Price_investment_PCM * self.Ness_PCM
+        return Cost_investment_ESS
+    def Cost_investment_Generation (self):
+        Cost_investment_Generation = self.Price_investment_PV + self.Price_investment_WT  + self.Price_investment_TPS + self.Price_investment_CSP + self.Price_investment_RC
+        return Cost_investment_Generation
+    def Cost_operation_Generation (self):
+        Cost_operation_Generation = self.Price_operational_PV*self.Total_PV + self.Price_operational_WT*self.Total_WT + self.Price_operational_TPS*self.Total_TPS + self.Price_operational_CSP*self.Total_CSP
+        return Cost_operation_Generation
+
     def LCOE (self):
-        self.metrics['LCOE'] = 0
+        LCOE_numinator = 0
+        LCOE_denominator = 0
+        for t in range(int(self.life_time)+1):
+            self.Cost_investment_Generation1 = self.Cost_investment_Generation() * (1 + self.discount_rate) ** (-t)
+            self.Cost_investment_ESS1 = self.Cost_investment_ESS() * (1 + self.discount_rate) ** (-t)
+            self.Cost_operation_Generation1 = self.Cost_operation_Generation() * (1 + self.discount_rate) ** (-t)
+            self.Cost_operation_ESS1 = self.Cost_operation_ESS * (1 + self.discount_rate) ** (-t)
+            self.Total_PV1 = self.Total_PV * (1 + self.discount_rate) ** (-t)
+            self.Total_WT1 = self.Total_WT * (1 + self.discount_rate) ** (-t)
+            self.Total_TPS1 = self.Total_TPS * (1 + self.discount_rate) ** (-t)
+            self.Total_CSP1 = self.Total_CSP * (1 + self.discount_rate) ** (-t)
+            self.Total_P2rk1 = self.Total_P2rk * (1 + self.discount_rate) ** (-t)
+            LCOE_numinator += (self.Cost_investment_Generation1 + self.Cost_investment_ESS1 + self.Cost_operation_Generation1 *365+ self.Cost_operation_ESS1 * 365)
+            LCOE_denominator += (self.Total_P2rk1 + self.Total_PV1 + self.Total_WT1 + self.Total_TPS1 + self.Total_CSP1) * 365 
+            
+        if LCOE_denominator != 0:
+            self.metrics['LCOE'] = LCOE_numinator / LCOE_denominator
+        else:
+            self.metrics['LCOE'] = None
+            print('Division by zero in LCOE calculation')
+            logging.error('Division by zero in LCOE calculation')
+    def Capex (self):
+        Capex = self.Cost_investment_Generation() + self.Cost_investment_ESS()
+        self.metrics['Capex'] = Capex
+    def Opex (self):
+        Opex = self.Cost_operation_Generation() + self.Cost_operation_ESS
+        self.metrics['Opex'] = Opex
     def calculate(self):
         return self.metrics
