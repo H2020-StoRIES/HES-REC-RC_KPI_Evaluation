@@ -35,7 +35,6 @@ class MetricCalculator():
         self.sorted_P_import = self.P_import[self.sorted_indices_import]   
         self.sorted_P_import_base = self.P_import_base[self.sorted_indices_import]
         self.sorted_P_export_base = self.P_export_base[self.sorted_indices_export]
-        self.E_th_ext= sum(self.Pt_grid[:T])/1000
         self.Total_El_load = sum(np.array(data ['Total_El_load']))/1000
         self.Total_Th_load = sum(np.array(data ['Total_Th_load']))/1000
         # self.Total_El_Gen = np.array(data['Total_El_Gen'])
@@ -66,8 +65,8 @@ class MetricCalculator():
         self.Total_P2rk= sum(np.array(data["P2rk"]))/1000
         self.life_time= data_opt['General']['lifeTime']
         self.discount_rate= data_opt['General']['discountRate']
-        self.Total_El_Gen= sum(np.array(data["P_CT_PV"])) + sum(np.array(data["P_CT_WD"])) 
-        self.Total_Th_Gen= sum(np.array(data["P_tsp"])) + sum(np.array(data["P_csp"]))
+        self.Total_El_Gen= sum(np.array(data["P_CT_PV"]))/1000 + sum(np.array(data["P_CT_WD"])) /1000
+        self.Total_Th_Gen= sum(np.array(data["P_tsp"]))/1000 + sum(np.array(data["P_csp"]))/1000
         self.Eta_RC= data_opt['Thermal_to_Electrical_Converters'][0][list(data_opt['Thermal_to_Electrical_Converters'][0].keys())[0]]["Eta_RC"] # Efficiency of the Rankine Cycle
 
         
@@ -149,25 +148,34 @@ class MetricCalculator():
             print('Division by zero in FF_SB')
             logging.error('Division by zero in FF_SB')
     
-    def Eff (self):        
-        Eff = (
+    def Eff_el (self):        
+        Eff_el = (
             abs(self.Total_El_load) + abs(sum(self.P_export))
         ) / (
             abs(self.Total_El_Gen) + abs(sum(self.P_import)) + self.Eta_RC * abs(sum(self.P_CT_rk))
         )
-        self.metrics['Eff'] = Eff   
+        self.metrics['Eff_el'] = Eff_el  
     def Eff_th (self):
         denominator = abs(self.Total_Th_Gen) + abs(sum(self.Pt_import))
         if denominator != 0:
             Eff_th = (
                 abs(self.Total_Th_load) + abs(sum(self.Pt_export))
-                + (1-self.Eta_RC) * abs(sum(self.P_CT_rk))
+                + abs(sum(self.P_CT_rk))
             ) / denominator
             self.metrics['Eff_th'] = Eff_th
         else:
             self.metrics['Eff_th'] = None
             print('Division by zero in Eff_th calculation')
             logging.error('Division by zero in Eff_th calculation')
+    def Eff (self):
+        Eff = (
+            abs(self.Total_El_load) + abs(sum(self.P_export))
+            + abs(self.Total_Th_load) + abs(sum(self.Pt_export)) + abs(sum(self.P_CT_rk))
+        ) / (
+            abs(self.Total_El_Gen) + abs(sum(self.P_import)) + self.Eta_RC * abs(sum(self.P_CT_rk))
+            + abs(self.Total_Th_Gen) + abs(sum(self.Pt_import))
+        )
+        self.metrics['Eff'] = Eff
     def Cost_investment_ESS (self):
         Cost_investment_ESS = (self.Price_investment_Bat * self.Ness_Bat + self.Price_investment_sc * self.Ness_sc + self.Price_investment_HP * self.Ness_HP) + self.Price_investment_PCM * self.Ness_PCM
         return Cost_investment_ESS
