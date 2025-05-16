@@ -65,6 +65,8 @@ class MetricCalculator():
         self.Total_P2rk= sum(np.array(data["P2rk"]))/1000
         self.life_time= data_opt['General']['lifeTime']
         self.discount_rate= data_opt['General']['discountRate']
+        self.CI_el= data_opt['General']['CI_el']
+        self.CI_th= data_opt['General']['CI_th']
         self.Total_El_Gen= sum(np.array(data["P_CT_PV"]))/1000 + sum(np.array(data["P_CT_WD"])) /1000
         self.Total_Th_Gen= sum(np.array(data["P_tsp"]))/1000 + sum(np.array(data["P_csp"]))/1000
         self.Eta_RC= data_opt['Thermal_to_Electrical_Converters'][0][list(data_opt['Thermal_to_Electrical_Converters'][0].keys())[0]]["Eta_RC"] # Efficiency of the Rankine Cycle
@@ -218,5 +220,9 @@ class MetricCalculator():
     def Opex_Per_kWh (self):
         Opex = (self.Cost_operation_Generation() + self.Cost_operation_ESS)/(self.Total_El_load)
         self.metrics['Opex_Per_kWh'] = Opex
+    def Co2_emission (self):
+        Baseline_Co2_emission = (self.CI_el * self.Total_El_load + self.CI_th * self.Total_Th_load)
+        Co2_emission = ((self.CI_el * sum(self.P_import) + self.CI_th * sum(self.Pt_import))-Baseline_Co2_emission)/Baseline_Co2_emission
+        self.metrics['Co2_emission'] = Co2_emission
     def calculate(self):
         return self.metrics

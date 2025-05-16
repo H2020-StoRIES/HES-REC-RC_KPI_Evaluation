@@ -44,6 +44,7 @@ def calculate_metrics(data, data_simulink, data_opt, data_base, dir, run_id):
     MC.Capex()
     MC.Annual_Opex()
     MC.Opex_Per_kWh()
+    MC.Co2_emission()
     # print(MC.calculate())
     # for k, v in MC.calculate().items():
     #     print(f"{k}: {float(v)}")
