@@ -1,3 +1,14 @@
+"""
+KPI_evaluation.py
+
+This script calculates various Key Performance Indicators (KPIs) for a given dataset.
+It reads input data from JSON and YAML files, computes metrics using the MetricCalculator class,
+and outputs the results to both Excel and JSON files.
+
+Author: Seyede Zahra Tajalli
+Email: szata@dtu.dk
+
+"""
 import os
 import json
 import logging
