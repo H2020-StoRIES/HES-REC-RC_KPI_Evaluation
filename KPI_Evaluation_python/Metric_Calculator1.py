@@ -2,16 +2,8 @@ import random
 import numpy as np
 random.seed(5)
 
-from config import Config
-import logging
-from logging_util import setup_logging
-setup_logging()
-# Open and read the JSON file
-
-
-
-T= Config.T
-median = Config.get_config().median
+T = 24
+median = int(T/2)
 class MetricCalculator():
     def __init__(self, data, data_simulink, data_opt,  data_base):
         
@@ -88,7 +80,7 @@ class MetricCalculator():
         elif total_Exchange == 0:
             self.metrics['FF'] = None
             print('Division by zero in FF')
-            logging.error('Division by zero in FF')
+            # logging.error('Division by zero in FF')
     def FF_base (self):
         sum_export_base= sum(self.sorted_P_export_base)
         sum_import_base= sum (self.sorted_P_import_base)
@@ -101,7 +93,7 @@ class MetricCalculator():
         else:
             self.metrics['FF_base'] = None
             print('Division by zero in FF_base')
-            logging.error('Division by zero in FF_base')
+            # logging.error('Division by zero in FF_base')
 
     def FF_W (self):
         cost_import = sum(self.sorted_P_import*self.sorted_Price_import)
@@ -124,7 +116,7 @@ class MetricCalculator():
         else:
             self.metrics['FF_W'] = None
             print('Division by zero in FF_W')
-            logging.error('Division by zero in FF_W')
+            # logging.error('Division by zero in FF_W')
 
     def FF_shift (self):
         FF= self.metrics['FF']
@@ -135,7 +127,7 @@ class MetricCalculator():
         else:
             self.metrics['FF_shift'] = None
             print('Division by zero in FF_shift')
-            logging.error('Division by zero in FF_shift')
+            # logging.error('Division by zero in FF_shift')
 
     def FF_SB (self):
         import_cost_base = sum(self.sorted_P_import_base*self.sorted_Price_import)
@@ -148,7 +140,7 @@ class MetricCalculator():
         else:
             self.metrics['FF_SB'] = None
             print('Division by zero in FF_SB')
-            logging.error('Division by zero in FF_SB')
+            # logging.error('Division by zero in FF_SB')
     
     def Eff_el (self):        
         Eff_el = (
@@ -168,7 +160,7 @@ class MetricCalculator():
         else:
             self.metrics['Eff_th'] = None
             print('Division by zero in Eff_th calculation')
-            logging.error('Division by zero in Eff_th calculation')
+            # logging.error('Division by zero in Eff_th calculation')
     def Eff (self):
         Eff = (
             abs(self.Total_El_load) + abs(sum(self.P_export))
@@ -210,7 +202,7 @@ class MetricCalculator():
         else:
             self.metrics['LCOE'] = None
             print('Division by zero in LCOE calculation')
-            logging.error('Division by zero in LCOE calculation')
+            # logging.error('Division by zero in LCOE calculation')
     def Capex (self):
         Capex = (self.Cost_investment_Generation() + self.Cost_investment_ESS())
         self.metrics['Capex'] = Capex
